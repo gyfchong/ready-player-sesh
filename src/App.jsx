@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import styled from "@emotion/styled";
 import capitalize from "capitalize";
 import { pl } from "date-fns/locale";
+import { supabase } from "./api";
 
 const sessions = [
   {
@@ -20,14 +21,6 @@ const sessions = [
   { date: new Date(2022, 5, 7), players: [] },
   { date: new Date(2022, 4, 2), players: [] },
 ];
-
-const findLastIndex = (array, predicate) => {
-  let l = array.length;
-  while (l--) {
-    if (predicate(array[l], l, array)) return l;
-  }
-  return -1;
-};
 
 function array_move(arr, old_index, new_index) {
   if (new_index >= arr.length) {
