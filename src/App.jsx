@@ -2,9 +2,19 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import styled from "@emotion/styled";
 import capitalize from "capitalize";
+import { pl } from "date-fns/locale";
 
 const sessions = [
-  { date: new Date(2022, 6, 25), players: [] },
+  {
+    date: new Date(2022, 6, 25),
+    players: [
+      { name: "Dayne", status: "undecided" },
+      { name: "Simon.NET", status: "undecided" },
+      { name: "Simon.JS", status: "undecided" },
+      { name: "Drew", status: "undecided" },
+      { name: "Geoff", status: "undecided" },
+    ],
+  },
   { date: new Date(2022, 6, 4), players: [] },
   { date: new Date(2022, 5, 7), players: [] },
   { date: new Date(2022, 4, 2), players: [] },
@@ -30,7 +40,7 @@ function array_move(arr, old_index, new_index) {
 }
 
 function App() {
-  const [sessionPlayers, setSessionPlayers] = useState([
+  const [groupMembers, setGroupMembers] = useState([
     { name: "Dayne", status: "undecided" },
     { name: "Simon.NET", status: "undecided" },
     { name: "Simon.JS", status: "undecided" },
@@ -39,14 +49,10 @@ function App() {
   ]);
 
   const [picker, setPicker] = useState(-1);
-  const [enoughAttendees, setEnoughAttendees] = useState(false);
-
-  const allPlayersVoted = sessionPlayers.every(
-    (player) => player.status !== "undecided"
-  );
+  const [sessionPlayers, setSessionPlayers] = useState([]);
 
   const setGamePicker = () => {
-    const newPickerIndex = sessionPlayers.findIndex(
+    const newPickerIndex = groupMembers.findIndex(
       (seshPlayer) => seshPlayer.status === "going"
     );
 
@@ -56,24 +62,25 @@ function App() {
   const nextPlayerOrder = () => {
     const newPlayerOrder = [...sessionPlayers];
 
-    const lastGoingPlayerIndex = findLastIndex(
-      sessionPlayers,
-      (seshPlayer) => seshPlayer.status === "going"
-    );
+    const absenteesIndexes = groupMembers.reduce((absentees, player, index) => {
+      if (player.status === "absent") {
+        absentees.push({ ...player, index });
+      }
 
-    array_move(newPlayerOrder, picker, lastGoingPlayerIndex);
+      return absentees;
+    }, []);
 
-    const nextPicker = newPlayerOrder.findIndex(
-      (seshPlayer) => seshPlayer.status === "going"
-    );
+    array_move(newPlayerOrder, 0, newPlayerOrder.length - 1);
 
-    array_move(newPlayerOrder, nextPicker, 0);
+    absenteesIndexes.forEach(({ index, ...absentee }) => {
+      newPlayerOrder.splice(index, 0, absentee);
+    });
 
     return newPlayerOrder;
   };
 
   const handleStatusChange = (playerIndex, status) => () => {
-    const updatedPlayers = sessionPlayers.map((player, index) => {
+    const updatedPlayers = groupMembers.map((player, index) => {
       const updatedPlayer = { ...player };
 
       // Update the current player's status
@@ -85,24 +92,27 @@ function App() {
       return player;
     });
 
-    setSessionPlayers(updatedPlayers);
+    setGroupMembers(updatedPlayers);
   };
 
   useEffect(() => {
     setGamePicker();
-  }, [sessionPlayers]);
+  }, [groupMembers]);
 
   useEffect(() => {
-    const calcNumAttendees = sessionPlayers.reduce((numAttendees, player) => {
-      if (player.status === "going") {
-        numAttendees++;
-      }
+    const allPlayersVoted = groupMembers.every(
+      (player) => player.status !== "undecided"
+    );
 
-      return numAttendees;
-    }, 0);
+    if (allPlayersVoted) {
+      const playerList = groupMembers.filter(
+        (player) => player.status === "going"
+      );
+      setSessionPlayers(playerList);
+    }
+  }, [groupMembers]);
 
-    setEnoughAttendees(calcNumAttendees >= 3);
-  }, [sessionPlayers]);
+  const enoughAttendees = sessionPlayers ? sessionPlayers.length >= 3 : false;
 
   return (
     <>
@@ -110,7 +120,7 @@ function App() {
       <Container>
         <Stack>
           <h2>RSVP</h2>
-          {sessionPlayers.map((player, index) => {
+          {groupMembers.map((player, index) => {
             const isPicker = picker === index;
             const isUndecided = player.status === "undecided";
             const isGoing = player.status === "going";
@@ -212,12 +222,14 @@ function App() {
           ) : (
             <p>We need more than 3 to play</p>
           )}
+          <h3>Starting player</h3>
+          {sessionPlayers &&
+            sessionPlayers[Math.random(sessionPlayers.length - 1)]}
         </Stack>
         <Stack>
           <h2>Next player order</h2>
           <ol>
             {enoughAttendees &&
-              allPlayersVoted &&
               nextPlayerOrder().map((player) => <li>{player.name}</li>)}
           </ol>
         </Stack>
