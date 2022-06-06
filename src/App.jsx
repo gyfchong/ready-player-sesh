@@ -180,17 +180,29 @@ function App() {
                 <h3>Boardgame lists:</h3>
                 <List>
                   <li>
-                    <a href="https://boardgamegeek.com/collection/user/Nizmox?geekranks=Board%20Game%20Rank&excludesubtype=boardgameexpansion&objecttype=thing&gallery=large&rankobjecttype=subtype&rankobjectid=1&columns=title%7Cstatus%7Cversion%7Crating%7Cbggrating%7Cplays%7Ccomment%7Ccommands&own=1&trade=0&want=0&wanttobuy=0&prevowned=0&ff=1&subtype=boardgame">
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://boardgamegeek.com/collection/user/Nizmox?geekranks=Board%20Game%20Rank&excludesubtype=boardgameexpansion&objecttype=thing&gallery=large&rankobjecttype=subtype&rankobjectid=1&columns=title%7Cstatus%7Cversion%7Crating%7Cbggrating%7Cplays%7Ccomment%7Ccommands&own=1&trade=0&want=0&wanttobuy=0&prevowned=0&ff=1&subtype=boardgame"
+                    >
                       Simon.JS's boardgames
                     </a>
                   </li>
                   <li>
-                    <a href="https://boardgamegeek.com/collection/user/mercury_sn?own=1&subtype=boardgame&ff=1">
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://boardgamegeek.com/collection/user/mercury_sn?own=1&subtype=boardgame&ff=1"
+                    >
                       Simon.NET's Boardgames
                     </a>
                   </li>
                   <li>
-                    <a href="https://boardgamegeek.com/collection/user/daynemarais?own=1">
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://boardgamegeek.com/collection/user/daynemarais?own=1"
+                    >
                       Dayne's boardgames
                     </a>
                   </li>
