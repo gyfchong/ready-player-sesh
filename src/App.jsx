@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import styled from "@emotion/styled";
@@ -51,6 +52,12 @@ function App() {
   const [picker, setPicker] = useState(-1);
   const [sessionPlayers, setSessionPlayers] = useState([]);
 
+  const allPlayersVoted = groupMembers.every(
+    (player) => player.status !== "undecided"
+  );
+
+  const enoughAttendees = sessionPlayers.length >= 3;
+
   const setGamePicker = () => {
     const newPickerIndex = groupMembers.findIndex(
       (seshPlayer) => seshPlayer.status === "going"
@@ -100,10 +107,6 @@ function App() {
   }, [groupMembers]);
 
   useEffect(() => {
-    const allPlayersVoted = groupMembers.every(
-      (player) => player.status !== "undecided"
-    );
-
     if (allPlayersVoted) {
       const playerList = groupMembers.filter(
         (player) => player.status === "going"
@@ -111,8 +114,6 @@ function App() {
       setSessionPlayers(playerList);
     }
   }, [groupMembers]);
-
-  const enoughAttendees = sessionPlayers ? sessionPlayers.length >= 3 : false;
 
   return (
     <>
@@ -220,11 +221,8 @@ function App() {
               </Stack>
             </form>
           ) : (
-            <p>We need more than 3 to play</p>
+            <p>Everyone needs to RSVP, and we need more than 3 to play</p>
           )}
-          <h3>Starting player</h3>
-          {sessionPlayers &&
-            sessionPlayers[Math.random(sessionPlayers.length - 1)]}
         </Stack>
         <Stack>
           <h2>Next player order</h2>
