@@ -1,22 +1,20 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { QueryClient, QueryClientProvider } from "react-query";
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Session from "./pages/Session";
-import Dashboard from "./pages/Dashboard";
+import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+    },
+  },
+});
+
 root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<Dashboard />} />
-        <Route path="login" element={<Login />} />
-        <Route path="session" element={<Session />} />
-      </Route>
-    </Routes>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
 );

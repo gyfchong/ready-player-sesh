@@ -4,7 +4,8 @@ import { format } from "date-fns";
 import styled from "@emotion/styled";
 import capitalize from "capitalize";
 import { pl } from "date-fns/locale";
-import { supabase } from "../api";
+import { isLoggedIn } from "../utils/auth";
+import { Link } from "react-router-dom";
 
 const sessions = [
   {
@@ -110,6 +111,7 @@ const Session = () => {
 
   return (
     <>
+      {isLoggedIn() && <Link to="/dashboard">Dashboard</Link>}
       <h1>Ready Player Sesh</h1>
       <Container>
         <Stack>
@@ -127,19 +129,6 @@ const Session = () => {
                   <div>{isPicker && <Tag>Game picker</Tag>}</div>
                 </Stack>
                 <List>
-                  <li>
-                    <Label>
-                      <input
-                        type="radio"
-                        name={`status-${player.name}`}
-                        value="undecided"
-                        checked={isUndecided}
-                        onChange={handleStatusChange(index, "undecided")}
-                        disabled={isGoing || isAbsent}
-                      />{" "}
-                      Undecided
-                    </Label>
-                  </li>
                   <li>
                     <Label>
                       <input
