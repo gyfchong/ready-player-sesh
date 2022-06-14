@@ -6,7 +6,7 @@ export default () => {
   return (
     <>
       <h1>Home</h1>
-      {isLoggedIn ? <Link to="/Dashboard">Go to Dashboard</Link> : <Login />}
+      {isLoggedIn ? <Link to="/dashboard">Go to Dashboard</Link> : <Login />}
     </>
   );
 };

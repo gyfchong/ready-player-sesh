@@ -1,56 +1,28 @@
 // @ts-nocheck
 import { useEffect, useState } from "react";
+import { useQuery } from "react-query";
 import { format } from "date-fns";
 import styled from "@emotion/styled";
 import capitalize from "capitalize";
-import { pl } from "date-fns/locale";
 import { isLoggedIn } from "../utils/auth";
-import { Link } from "react-router-dom";
-
-const sessions = [
-  {
-    date: new Date(2022, 6, 25),
-    players: [
-      { name: "Dayne", status: "undecided" },
-      { name: "Simon.NET", status: "undecided" },
-      { name: "Simon.JS", status: "undecided" },
-      { name: "Drew", status: "undecided" },
-      { name: "Geoff", status: "undecided" },
-    ],
-  },
-  { date: new Date(2022, 6, 4), players: [] },
-  { date: new Date(2022, 5, 7), players: [] },
-  { date: new Date(2022, 4, 2), players: [] },
-];
-
-function array_move(arr, old_index, new_index) {
-  if (new_index >= arr.length) {
-    var k = new_index - arr.length + 1;
-    while (k--) {
-      arr.push(undefined);
-    }
-  }
-  arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-  return arr; // for testing
-}
+import { Link, useParams } from "react-router-dom";
+import nextSessionGamePicker from "../utils/nextSessionGamePicker";
+import { Button } from "@adobe/react-spectrum";
+import { sessionsById } from "../api/fetchSession";
 
 const Session = () => {
-  const [groupMembers, setGroupMembers] = useState([
-    { name: "Dayne", status: "undecided" },
-    { name: "Simon.NET", status: "undecided" },
-    { name: "Simon.JS", status: "undecided" },
-    { name: "Drew", status: "undecided" },
-    { name: "Geoff", status: "undecided" },
-  ]);
+  const { id } = useParams();
+  const { data: currentSession } = useQuery("sessions", () => sessionsById(id));
+
+  const [groupMembers, setGroupMembers] = useState();
 
   const [picker, setPicker] = useState(-1);
-  const [sessionPlayers, setSessionPlayers] = useState([]);
+  const [attendees, setAttendees] = useState([]);
 
-  const allPlayersVoted = groupMembers.every(
-    (player) => player.status !== "undecided"
-  );
+  const allPlayersVoted = () =>
+    groupMembers.every((player) => player.status !== "undecided");
 
-  const enoughAttendees = sessionPlayers.length >= 3;
+  const enoughAttendees = attendees.length >= 3;
 
   const setGamePicker = () => {
     const newPickerIndex = groupMembers.findIndex(
@@ -58,26 +30,6 @@ const Session = () => {
     );
 
     setPicker(newPickerIndex);
-  };
-
-  const nextPlayerOrder = () => {
-    const newPlayerOrder = [...sessionPlayers];
-
-    const absenteesIndexes = groupMembers.reduce((absentees, player, index) => {
-      if (player.status === "absent") {
-        absentees.push({ ...player, index });
-      }
-
-      return absentees;
-    }, []);
-
-    array_move(newPlayerOrder, 0, newPlayerOrder.length - 1);
-
-    absenteesIndexes.forEach(({ index, ...absentee }) => {
-      newPlayerOrder.splice(index, 0, absentee);
-    });
-
-    return newPlayerOrder;
   };
 
   const handleStatusChange = (playerIndex, status) => () => {
@@ -97,34 +49,45 @@ const Session = () => {
   };
 
   useEffect(() => {
-    setGamePicker();
+    if (groupMembers) {
+      setGamePicker();
+    }
   }, [groupMembers]);
 
   useEffect(() => {
-    if (allPlayersVoted) {
+    if (groupMembers && allPlayersVoted()) {
       const playerList = groupMembers.filter(
         (player) => player.status === "going"
       );
-      setSessionPlayers(playerList);
+      setAttendees(playerList);
     }
   }, [groupMembers]);
+
+  useEffect(() => {
+    if (currentSession) {
+      setGroupMembers(currentSession.invitees);
+    }
+  }, [currentSession]);
+
+  if (!groupMembers) {
+    return "Getting session...";
+  }
 
   return (
     <>
       {isLoggedIn() && <Link to="/dashboard">Dashboard</Link>}
-      <h1>Ready Player Sesh</h1>
+      <h1>{format(new Date(currentSession.date), "cccc dd/MM/yy")}</h1>
       <Container>
         <Stack>
           <h2>RSVP</h2>
           {groupMembers.map((player, index) => {
             const isPicker = picker === index;
-            const isUndecided = player.status === "undecided";
             const isGoing = player.status === "going";
             const isAbsent = player.status === "absent";
 
             return (
-              <Card isGoing={isGoing} isAbsent={isAbsent}>
-                <Stack>
+              <Card key={player.name} isGoing={isGoing} isAbsent={isAbsent}>
+                <Stack gap="8px">
                   <PlayerName>{capitalize(player.name)}</PlayerName>
                   <div>{isPicker && <Tag>Game picker</Tag>}</div>
                 </Stack>
@@ -159,18 +122,10 @@ const Session = () => {
           })}
         </Stack>
         <Stack>
-          <h2>Pick your boardgame</h2>
-
           {enoughAttendees ? (
             <form>
               <Stack>
-                <Stack gap="8px">
-                  <label htmlFor="boardgame-1">Game 1:</label>
-                  <input type="text" name="boardgame-1" id="boardgame-1" />
-                  <label htmlFor="boardgame-2">Game 2:</label>
-                  <input type="text" name="boardgame-2" id="boardgame-2" />
-                </Stack>
-                <h3>Boardgame lists:</h3>
+                <h2>Pick your boardgame</h2>
                 <List>
                   <li>
                     <a
@@ -200,18 +155,19 @@ const Session = () => {
                     </a>
                   </li>
                 </List>
+                <Stack gap="8px">
+                  <label htmlFor="boardgame-1">Game 1:</label>
+                  <input type="text" name="boardgame-1" id="boardgame-1" />
+                  <label htmlFor="boardgame-2">Game 2:</label>
+                  <input type="text" name="boardgame-2" id="boardgame-2" />
+                </Stack>
+
+                <Button>Start session</Button>
               </Stack>
             </form>
           ) : (
             <p>Everyone needs to RSVP, and we need more than 3 to play</p>
           )}
-        </Stack>
-        <Stack>
-          <h2>Next player order</h2>
-          <ol>
-            {enoughAttendees &&
-              nextPlayerOrder().map((player) => <li>{player.name}</li>)}
-          </ol>
         </Stack>
       </Container>
     </>
@@ -231,11 +187,9 @@ const Card = styled.div`
   justify-content: space-between;
   min-width: 300px;
   padding: 24px;
-  border: 2px solid ${({ isGoing }) => (isGoing ? "#1fa35a" : "#6b6b6b")};
+  border: 2px solid ${({ isGoing }) => (isGoing ? "#1fa35a" : "#2e2e2e")};
   border-radius: 6px;
   max-width: 300px;
-  ${({ isGoing }) => isGoing && `background-color: #d4f7e5`};
-  ${({ isAbsent }) => isAbsent && `background-color: #ededed`};
 `;
 
 const PlayerName = styled.div`
@@ -260,12 +214,6 @@ const Container = styled.div`
   display: flex;
   width: 100%;
   gap: 42px;
-  & > * {
-    padding-right: 42px;
-    border-style: solid;
-    border-width: 0 1px 0 0;
-    border-color: #c3c3c3;
-  }
 `;
 
 const List = styled.ul`
